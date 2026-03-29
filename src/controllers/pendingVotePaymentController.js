@@ -1,8 +1,8 @@
 const prisma = require("../prisma/client");
 
 const PRICE_PER_VOTE = 1;
-const MOMO_NUMBER = process.env.MOMO_NUMBER || "0550000000";
-const MOMO_NAME = process.env.MOMO_NAME || "HOLICO SRC";
+const MOMO_NUMBER = process.env.MOMO_NUMBER || "0274603906";
+const MOMO_NAME = process.env.MOMO_NAME || "NAA KORKOI";
 
 const generateCode = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
