@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  description  String?
+  slug         String        @unique
+  nominees     Nominee[]
+  voteRequests VoteRequest[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Nominee {
+  id           Int           @id @default(autoincrement())
+  name         String
+  image        String?
+  bio          String?
+  voteCount    Int           @default(0)
+  categoryId   Int
+  category     Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  votes        Vote[]
+  voteRequests VoteRequest[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([categoryId])
+}
+
+model Vote {
+  id         Int      @id @default(autoincrement())
+  voterEmail String?
+  voterIP    String?
+  userAgent  String?
+  nomineeId  Int
+  nominee    Nominee  @relation(fields: [nomineeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([nomineeId])
+  @@index([voterEmail])
+  @@index([voterIP])
+  @@index([createdAt])
+}
+
+model VoteRequest {
+  id              Int       @id @default(autoincrement())
+  code            String    @unique
+  reference       String    @unique
+  payerName       String?
+  payerPhone      String?
+  paymentNumber   String?
+  amount          Decimal   @db.Decimal(10, 2)
+  voteCount       Int
+  status          String    @default("pending")
+  rejectionReason String?
+  nomineeId       Int
+  categoryId      Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  approvedAt      DateTime?
+
+  nominee  Nominee  @relation(fields: [nomineeId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
