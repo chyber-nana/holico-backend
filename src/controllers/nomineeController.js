@@ -1,9 +1,22 @@
 const prisma = require("../prisma/client");
+const cloudinary = require("../config/cloudinary");
+const streamifier = require("streamifier");
 
-const buildImageUrl = (req, file) => {
-  if (!file) return null;
-  return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
-};
+const uploadToCloudinary = (fileBuffer, folder = "holico/nominees") =>
+  new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+
+    streamifier.createReadStream(fileBuffer).pipe(stream);
+  });
 
 exports.getNominees = async (_req, res) => {
   try {
@@ -26,12 +39,19 @@ exports.createNominee = async (req, res) => {
   try {
     const { name, bio, categoryId } = req.body;
 
+    let imageUrl = null;
+
+    if (req.file) {
+      const uploaded = await uploadToCloudinary(req.file.buffer);
+      imageUrl = uploaded.secure_url;
+    }
+
     const nominee = await prisma.nominee.create({
       data: {
         name,
         bio: bio || "",
         categoryId: Number(categoryId),
-        image: buildImageUrl(req, req.file),
+        image: imageUrl,
       },
       include: {
         category: true,
@@ -57,13 +77,20 @@ exports.updateNominee = async (req, res) => {
       return res.status(404).json({ message: "Nominee not found" });
     }
 
+    let imageUrl = existing.image;
+
+    if (req.file) {
+      const uploaded = await uploadToCloudinary(req.file.buffer);
+      imageUrl = uploaded.secure_url;
+    }
+
     const nominee = await prisma.nominee.update({
       where: { id },
       data: {
         name,
         bio: bio || "",
         categoryId: Number(categoryId),
-        image: req.file ? buildImageUrl(req, req.file) : existing.image,
+        image: imageUrl,
       },
       include: {
         category: true,
