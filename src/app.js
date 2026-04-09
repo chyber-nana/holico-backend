@@ -27,6 +27,7 @@ app.use('/api/nominees', nomineeRoutes);
 app.use('/api/votes', voteRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
+app.use("/api/portal", require("./routes/systemFlagRoutes"));
 
 app.use(errorMiddleware);
 
